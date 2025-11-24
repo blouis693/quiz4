@@ -20,8 +20,13 @@ void main()
     gl_Position = um4p * um4mv * vec4(iv3vertex, 1.0);
     vertexData.texcoord = iv2tex_coord;
 
-	// #TODO 3: Modify vertex shader
+        // #TODO 3: Modify vertex shader
     // BEGIN ANSWER
-
+    mat3 normalMatrix = transpose(inverse(mat3(um4mv)));
+    vec3 posEye = vec3(um4mv * vec4(iv3vertex, 1.0));
+    vec3 V = normalize(-posEye);
+    vertexData.N = normalize(normalMatrix * iv3normal);
+    vertexData.L = normalize(vec3(1.0, 1.0, 1.0));
+    vertexData.H = normalize(vertexData.L + V);
     // END ANSWER
 }
