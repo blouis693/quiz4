@@ -232,22 +232,22 @@ void My_Init()
 // GLUT callback. Called to draw the scene.
 void My_Display(GLFWwindow* window)
 {
-	// #TODO 5:
-	if (usePostProcessing)
-	{
-		// (1) Bind the framebuffer object correctly
-		// BEGIN ANSWER
+        // #TODO 5:
+        if (usePostProcessing)
+        {
+                // (1) Bind the framebuffer object correctly
+                // BEGIN ANSWER
+                glBindFramebuffer(GL_DRAW_FRAMEBUFFER, FBO);
+                // END ANSWER
 
-		// END ANSWER
-
-		// (2) Set draw buffer
-		// BEGIN ANSWER
-
-		// END ANSWER
-	}
-	else
-	{
-		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+                // (2) Set draw buffer
+                // BEGIN ANSWER
+                glDrawBuffer(GL_COLOR_ATTACHMENT0);
+                // END ANSWER
+        }
+        else
+        {
+                glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 	}
 
 	glUseProgram(program);
@@ -263,12 +263,12 @@ void My_Display(GLFWwindow* window)
 	GLfloat move = glfwGetTime() * 20.0f;
 	model = rotate(mat4(1.0f), radians(move), vec3(0.0, 1.0, 0.0));
 
-	glUniformMatrix4fv(um4mv, 1, GL_FALSE, value_ptr(view * model));
-	glUniformMatrix4fv(um4p, 1, GL_FALSE, value_ptr(projection));
-	// #TODO 1: Pass flag to shader (global variable: ubflag) via uniform
-	// BEGIN ANSWER
-
-	// END ANSWER
+        glUniformMatrix4fv(um4mv, 1, GL_FALSE, value_ptr(view * model));
+        glUniformMatrix4fv(um4p, 1, GL_FALSE, value_ptr(projection));
+        // #TODO 1: Pass flag to shader (global variable: ubflag) via uniform
+        // BEGIN ANSWER
+        glUniform1i(ubflag, flag);
+        // END ANSWER
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, m_shape.m_texture);
@@ -281,14 +281,19 @@ void My_Display(GLFWwindow* window)
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 
 		// #TODO 6:
-		// (1) Clear depth buffer
-		// (2) Bind the post processing shader program
-		// (3) Bind the correct vao for post processing
-		// (4) Bind input texture for post processing shader program
+                // (1) Clear depth buffer
+                // (2) Bind the post processing shader program
+                // (3) Bind the correct vao for post processing
+                // (4) Bind input texture for post processing shader program
 
-		// BEGIN ANSWER
-
-		// END ANSWER
+                // BEGIN ANSWER
+                glClear(GL_DEPTH_BUFFER_BIT);
+                glUseProgram(program2);
+                glBindVertexArray(window_vao);
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, FBODataTexture);
+                glUniform1i(texLoc, 0);
+                // END ANSWER
 
 		glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 	}
@@ -305,28 +310,36 @@ void My_Reshape(GLFWwindow* window, int width, int height)
 	view = lookAt(vec3(-10.0f, 5.0f, 0.0f), vec3(1.0f, 1.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
 
 	// If the windows is reshaped, we need to reset some settings of framebuffer
-	glDeleteRenderbuffers(1, &depthRBO);
-	glDeleteTextures(1, &FBODataTexture);
-	glGenRenderbuffers(1, &depthRBO);
-	glBindRenderbuffer(GL_RENDERBUFFER, depthRBO);
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT32, width, height);
+        glDeleteRenderbuffers(1, &depthRBO);
+        glDeleteTextures(1, &FBODataTexture);
+        glGenRenderbuffers(1, &depthRBO);
+        glBindRenderbuffer(GL_RENDERBUFFER, depthRBO);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT32, width, height);
 
 
-	// #TODO 7:
-	// (1) Generate a color texture for FBO
-	// (2) Allocate a storage for the texture object via glTexImage2D.
-	// (2) Set filtering parameters for the color texture.
-	// BEGIN ANSWER
+        // #TODO 7:
+        // (1) Generate a color texture for FBO
+        // (2) Allocate a storage for the texture object via glTexImage2D.
+        // (2) Set filtering parameters for the color texture.
+        // BEGIN ANSWER
+        glGenTextures(1, &FBODataTexture);
+        glBindTexture(GL_TEXTURE_2D, FBODataTexture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        // END ANSWER
 
-	// END ANSWER
-
-	// #TODO 8:
-	// (1) Bind the framebuffer object to GL_DRAW_FRAMEBUFFER
-	// (2) Attach depth renderbuffer object to the bound framebuffer object
-	// (3) Attach the color texture to the bound framebuffer object
-	// BEGIN ANSWER
-
-	// END ANSWER
+        // #TODO 8:
+        // (1) Bind the framebuffer object to GL_DRAW_FRAMEBUFFER
+        // (2) Attach depth renderbuffer object to the bound framebuffer object
+        // (3) Attach the color texture to the bound framebuffer object
+        // BEGIN ANSWER
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, FBO);
+        glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthRBO);
+        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, FBODataTexture, 0);
+        // END ANSWER
 
 }
 
